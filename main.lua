@@ -19,6 +19,18 @@ trunk_spr_3=154
 lily_pad_spr=150
 rock_spr=151
 
+player_side_spr=001
+player_down_spr=002
+player_up_spr=003
+
+
+-- player moves
+
+down=0
+up=1
+right=2
+left=3
+
 
 
 function _init()
@@ -38,8 +50,8 @@ end
 
 function _draw()
 	cls()
-	draw_player()
 	draw_map()
+	draw_player()
 	
 	if (game_over) then 
 		print("game over!", 44, 44, 7)
@@ -53,9 +65,10 @@ end
 -->8
 function make_player()
 	player={}
-	player.x=0
-	player.y=0
+	player.x=8
+	player.y=16
 	player.score=0
+    player.last_move=down
 end
 
 function make_map()
@@ -187,7 +200,15 @@ function update_row_type()
 end
 
 function draw_player()
-
+    if player.last_move==down then
+        spr(player_down_spr, 8*player.x, 8*player.y)
+    elseif player.last_move==up then
+        spr(player_up_spr, 8*player.x, 8*player.y)
+    elseif player.last_move==right then
+        spr(player_side_spr, 8*player.x, 8*player.y)
+    elseif player.last_move==left then
+        spr(player_side_spr, 8*player.x, 8*player.y, 1.0, 1.0, true, false)
+    end
 end
 
 function draw_map()
@@ -226,6 +247,25 @@ function isBackgroundSprite(sprite_no)
 end
 
 function update_player()
+    if btnp(0) then
+        player.x -= 1
+        player.last_move=left
+    elseif btnp(1) then
+        player.x += 1
+        player.last_move=right
+    end
+    
+    if btnp(2) then
+        player.y -= 1
+        player.score += 1 
+        player.last_move=up
+    elseif btnp(3) then
+        player.y += 1
+        player.last_move=down
+    end
+    
+    player.x = mid(0, player.x, 15)
+    player.y = mid(0, player.y, 15)
 end
 
 function update_map()
