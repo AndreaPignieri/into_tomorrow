@@ -1,30 +1,26 @@
 grass=0
 water=1
-tree_base=2
-tree=3
-mushroom=4
-trunk=5
-lily_pad=6
-rock=7
 
+-- Base Sprites
 grass_spr=128
 water_spr=131
 
+-- Grass Sprites
 tree_base_spr=134
 mushroom_spr=135
 tree_spr=136
-trunk_spr_1=152
-trunk_spr_2=153
-trunk_spr_3=154
+
+-- Water Sprites
 lily_pad_spr=150
 rock_spr=151
+trunk_spr=152 
 
+-- Player
 player_side_spr=001
 player_down_spr=002
 player_up_spr=003
 
-
--- player moves
+-- Movement 
 
 down=0
 up=1
@@ -65,8 +61,8 @@ end
 -->8
 function make_player()
 	player={}
-	player.x=8
-	player.y=16
+	player.x=7
+	player.y=0
 	player.score=0
     player.last_move=down
 end
@@ -74,14 +70,14 @@ end
 function make_map()
 	safe_x=7
 	max_y=0
-	mappa={}
+	map={}
 	queue_len=20
 	
 	row_type=0
 	consecutive_rows=0
 	
 	for i=1, queue_len do
-		add(mappa, create_row())
+		add(map, create_row())
 	end
 end
 
@@ -108,82 +104,74 @@ function generate_sprites()
         for i = 0, 15 do
             if i ~= safe_x and i ~= old_safe_x then
                 if rnd() < 0.5 then
-                    local obstacle_type = flr(rnd(3)) + 2
+                    local obstacle_type = 134 + flr(rnd(3))
                     local obstacle = { x = i, type = obstacle_type, timer = 0 }
                     add(sprites, obstacle)
                 else
-                    if rnd() < 0.3 then
-						bg_sprite_no = 130 + flr(rnd(4))
-					else
-						bg_sprite_no = 128 + flr(rnd(2))
-					end
-                    local bg_sprite = { x = i, type = bg_sprite_no, timer = 0 }
-                    add(sprites, bg_sprite)
+                    if rnd() < 0.3 then bg_sprite_no = 130 + flr(rnd(4))
+                    else bg_sprite_no = 128 + flr(rnd(2)) end
+                    add(sprites, { x = i, type = bg_sprite_no, timer = 0 })
                 end
             else
-				if rnd() < 0.3 then
-					bg_sprite_no = 130 + flr(rnd(4))
-				else
-					bg_sprite_no = 128 + flr(rnd(2))
-				end
-                local bg_sprite = { x = i, type = bg_sprite_no, timer = 0 }
-                add(sprites, bg_sprite)
+                if rnd() < 0.3 then bg_sprite_no = 130 + flr(rnd(4))
+                else bg_sprite_no = 128 + flr(rnd(2)) end
+                add(sprites, { x = i, type = bg_sprite_no, timer = 0 })
             end
         end
     end
 
     if row_type == water then
         local occupied_x = 0
-        
         for i = 0, 15 do
             if occupied_x <= 0 then
-                
                 if i ~= safe_x and i ~= old_safe_x then
                     if rnd() < 0.3 then
                         local obstacle_type
                         if i > 13 then
-                            obstacle_type = flr(rnd(2)) + 6
+                            local opts = {lily_pad_spr, rock_spr}
+                            obstacle_type = opts[flr(rnd(2)) + 1]
                         else 
-                            obstacle_type = flr(rnd(3)) + 5
+                            local opts = {lily_pad_spr, rock_spr, trunk_spr}
+                            obstacle_type = opts[flr(rnd(3)) + 1]
                         end
-                        
-                        local obstacle = { x = i, type = obstacle_type, timer = 0 }
-                        add(sprites, obstacle)
-                        
-                        if obstacle.type == trunk then
+                        if obstacle_type == trunk_spr then
+                            add(sprites, { x = i, type = trunk_spr, timer = 0 })
+                            add(sprites, { x = i + 1, type = trunk_spr + 1, timer = 0 })
+                            add(sprites, { x = i + 2, type = trunk_spr + 2, timer = 0 })
+    
                             occupied_x = 3 
+                        else
+                            add(sprites, { x = i, type = obstacle_type, timer = 0 })
                         end
                     else
-                        local sprite_no = flr(rnd(2)) + 144
-                        local sprite = { x = i, type = sprite_no, timer = 0 }
-                        add(sprites, sprite)
+                        add(sprites, { x = i, type = 144 + flr(rnd(2)), timer = 0 })
                     end
-                    
                 else
                     local obstacle_type
                     if i > 13 then
-                        obstacle_type = flr(rnd(2)) + 6
+                        local opts = {lily_pad_spr, rock_spr}
+                        obstacle_type = opts[flr(rnd(2)) + 1]
                     else 
-                        obstacle_type = flr(rnd(3)) + 5
+                        local opts = {lily_pad_spr, rock_spr, trunk_spr}
+                        obstacle_type = opts[flr(rnd(3)) + 1]
                     end
-                    
-                    local obstacle = { x = i, type = obstacle_type, timer = 0 }
-                    add(sprites, obstacle)  
-                    
-                    if obstacle.type == trunk then
+                    if obstacle_type == trunk_spr then
+                        add(sprites, { x = i, type = trunk_spr, timer = 0 })
+                        add(sprites, { x = i + 1, type = trunk_spr + 1, timer = 0 })
+                        add(sprites, { x = i + 2, type = trunk_spr + 2, timer = 0 })
+    
                         occupied_x = 3 
-                    end
+                    else
+                        add(sprites, { x = i, type = obstacle_type, timer = 0 })
+                    end    
                 end
-                
-            else
             end
-            
             occupied_x -= 1
         end
     end
 
     return sprites
-end	
+end
 
 function update_row_type()
 	consecutive_rows+=1
@@ -213,26 +201,9 @@ end
 
 function draw_map()
     local draw_y = 0
-    for row in all(mappa) do
-
+    for row in all(map) do
         for s in all(row.sprites) do
-            if isBackgroundSprite(s.type) then
-                spr(s.type, 8 * s.x, draw_y)
-            elseif s.type == tree then
-                spr(tree_spr, 8 * s.x, draw_y)
-            elseif s.type == tree_base then
-                spr(tree_base_spr, 8 * s.x, draw_y)
-            elseif s.type == mushroom then
-                spr(mushroom_spr, 8 * s.x, draw_y)
-            elseif s.type == lily_pad then
-                spr(lily_pad_spr, 8 * s.x, draw_y)
-            elseif s.type == rock then
-                spr(rock_spr, 8 * s.x, draw_y)
-            elseif s.type == trunk then
-                spr(trunk_spr_1, 8 * s.x, draw_y)
-                spr(trunk_spr_2, 8 * (s.x + 1), draw_y)
-                spr(trunk_spr_3, 8 * (s.x + 2), draw_y)
-            end
+            spr(s.type, 8 * s.x, draw_y)
         end
         draw_y += 8
     end
@@ -247,15 +218,16 @@ function isBackgroundSprite(sprite_no)
 end
 
 function update_player()
+    local current_player_x = player.x
+    local current_player_y = player.y
+
     if btnp(0) then
         player.x -= 1
         player.last_move=left
     elseif btnp(1) then
         player.x += 1
         player.last_move=right
-    end
-    
-    if btnp(2) then
+    elseif btnp(2) then
         player.y -= 1
         player.score += 1 
         player.last_move=up
@@ -266,6 +238,28 @@ function update_player()
     
     player.x = mid(0, player.x, 15)
     player.y = mid(0, player.y, 15)
+
+    if not check_legal_move() then
+        player.x = current_player_x
+        player.y = current_player_y
+    end
+
+end
+
+function check_legal_move()
+    local row_to_check = map[player.y + 1]
+    if not row_to_check then return false end
+
+    for sprite in all(row_to_check.sprites) do
+        if sprite.x == player.x then
+            sprite_to_check = sprite.type
+            break
+        end
+    end
+
+    if sprite_to_check == nil then return false end
+    return fget(sprite_to_check, 0)
+
 end
 
 function update_map()
