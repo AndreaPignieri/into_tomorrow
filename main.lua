@@ -62,12 +62,13 @@ end
 function make_player()
 	player={}
 	player.x=7
-	player.y=0
+	player.y=15
 	player.score=0
     player.last_move=down
 end
 
 function make_map()
+    timer=0
 	safe_x=7
 	max_y=0
 	map={}
@@ -200,12 +201,12 @@ function draw_player()
 end
 
 function draw_map()
-    local draw_y = 0
+    local draw_y = 15
     for row in all(map) do
         for s in all(row.sprites) do
-            spr(s.type, 8 * s.x, draw_y)
+            spr(s.type, 8 * s.x, 8 * draw_y)
         end
-        draw_y += 8
+        draw_y -= 1
     end
 end
 
@@ -229,7 +230,6 @@ function update_player()
         player.last_move=right
     elseif btnp(2) then
         player.y -= 1
-        player.score += 1 
         player.last_move=up
     elseif btnp(3) then
         player.y += 1
@@ -244,10 +244,11 @@ function update_player()
         player.y = current_player_y
     end
 
+    player.score = max_y
 end
 
 function check_legal_move()
-    local row_to_check = map[player.y + 1]
+    local row_to_check = map[16 - player.y]
     if not row_to_check then return false end
 
     for sprite in all(row_to_check.sprites) do
