@@ -31,7 +31,8 @@ left=3
 
 function _init()
 	game_over=false
-    difficulty_level=60
+    max_difficulty_reached=false
+    difficulty_level=30
 	make_player()
 	make_map()
 end
@@ -43,6 +44,7 @@ function _update()
         
 		update_player()
 		update_map()
+        update_difficulty()
 	elseif btnp((5)) then _init()
 	end
 end
@@ -53,6 +55,7 @@ function _draw()
 	draw_player()
 	
 	if (game_over) then 
+        rectfill(0,0,128,128,0)
 		print("game over!", 44, 44, 7)
 		print("your score:"..player.score,34,54,7)
 		print("press ❎ to play again!",18,72,6)
@@ -136,11 +139,14 @@ function update_player()
     end
 
     if player_counter >= difficulty_level then
+        if player.y == 15 then
+            game_over=true
+        end
         player.y+=1
+        player.score+=1
         player_counter = 0
     end 
     
-    player.score = max_y
 end
 
 
@@ -148,5 +154,17 @@ function update_map()
     if map_counter >= difficulty_level then
         add_row()
         map_counter=0
+    end
+end
+
+function update_difficulty()
+    if max_difficulty_reached then
+        return
+    else
+        difficulty_level = 30 - flr(player.score/2)
+        if difficulty_level < 8 then
+            difficulty_level = 8
+            max_difficulty_reached = true
+        end
     end
 end
